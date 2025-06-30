@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>School Admin Login</title>
+<style>
+  body { background: #1b1b1b; color: #fff; font-family: sans-serif; padding: 20px; }
+  form { max-width: 400px; margin: auto; background: #333; padding: 20px; border-radius: 8px; }
+  input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: none; }
+  button { background: #ffc107; color: #000; padding: 10px; width: 100%; border: none; border-radius: 5px; margin-top: 10px; }
+  .signup-link { text-align: center; margin-top: 15px; }
+  .signup-link a { color: #ffc107; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<h2>School Admin Login</h2>
+
+<form id="adminLoginForm">
+  <input type="text" id="username" placeholder="Username" required>
+  <input type="password" id="password" placeholder="Password" required>
+  <button type="submit">Login</button>
+</form>
+
+<div class="signup-link">
+  Don't have an account yet? <a href="school-admin-signup.html">Sign up here</a>
+</div>
+
+<div class="dashboard-link">
+  Already logged in? <a href="school-admin-dashboard.html">Go to Dashboard</a>
+</div>
+
+<script>
+  document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    const admins = JSON.parse(localStorage.getItem('schoolAdmins')) || [];
+    const found = admins.find(admin => admin.username === username && admin.password === password);
+
+    if (found) {
+      localStorage.setItem('schoolAdminLoggedIn', JSON.stringify(found));
+      window.location.href = 'school-admin-dashboard.html';
+    } else {
+      alert('Invalid login details!');
+    }
+  });
+   const loggedInAdmin = JSON.parse(localStorage.getItem('schoolAdminLoggedIn'));
+  if (loggedInAdmin) {
+    window.location.href = 'school-admin-dashboard.html';
+  }
+</script>
+
+</body>
+</html>

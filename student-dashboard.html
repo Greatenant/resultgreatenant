@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Dashboard</title>
+  <style>
+    body {
+      background: #0b0c10;
+      color: #fff;
+      font-family: sans-serif;
+      padding: 10px;
+    }
+
+    h1,
+    h2 {
+      text-align: center;
+    }
+
+    .section,
+    .message,
+    .assignment,
+    .lesson {
+      background: #1f2833;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+
+    button {
+      background: #e74c3c;
+      color: #fff;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 3px 2px;
+    }
+
+    .progress-bar {
+      background: #ccc;
+      border-radius: 5px;
+      overflow: hidden;
+      margin: 5px 0;
+    }
+
+    .progress {
+      background: #4caf50;
+      height: 12px;
+    }
+
+    .status {
+      padding: 3px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    .submitted {
+      background: #4caf50;
+    }
+
+    .pending {
+      background: #f39c12;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Student Dashboard</h1>
+  <a href="LESSONNOTES.html">Return to Homepage</a>
+
+  <div id="profile" class="section"></div>
+
+  <div class="section">
+    <h2>📌 Notifications</h2>
+    <div id="notifications"></div>
+  </div>
+
+  <div class="section">
+    <h2>📚 Your Assignments</h2>
+    <div id="assignmentsContainer"></div>
+  </div>
+
+  <div class="section">
+    <h2>✅ Submitted Assignments</h2>
+    <div id="submittedAssignments"></div>
+    <h3>Progress</h3>
+    <div class="progress-bar"><div id="progressBar" class="progress" style="width: 0%"></div></div>
+    <small id="progressPercent">0% Completed</small>
+  </div>
+
+  <div class="section">
+    <h2>📖 Lesson Notes</h2>
+    <div id="lessonsContainer"></div>
+  </div>
+
+  <div class="section">
+    <h2>💬 Messages</h2>
+    <div id="messagesContainer"></div>
+  </div>
+
+  <button onclick="logout()">Logout</button>
+
+  <script>
+    const student = JSON.parse(localStorage.getItem('loggedInStudent')) || { name: 'Unknown', className: 'None', id: '' };
+    const assignments = JSON.parse(localStorage.getItem('assignments')) || [];
+    const submissions = JSON.parse(localStorage.getItem('assignmentSubmissions')) || [];
+    const messages = JSON.parse(localStorage.getItem('messages')) || [];
+
+    document.getElementById('profile').innerHTML = `
+      <h2>${student.name}</h2>
+      <p><strong>Email:</strong> ${student.email || 'Not provided'}</p>
+      <p><strong>Class:</strong> ${student.className}</p>
+      <p><strong>Phone:</strong> ${student.phone || 'Not provided'}</p>
+    `;
+
+    function loadNotifications() {
+      const pending = assignments.filter(a => a.className === student.className)
+        .filter(a => !submissions.find(s => s.assignmentId === a.id && s.studentId === student.id));
+      document.getElementById('notifications').innerHTML = pending.length
+        ? `<p>You have <strong>${pending.length}</strong> pending assignments!</p>`
+        : `<p>🎉 No pending assignments!</p>`;
+    }
+
+    function renderAssignments() {
+      const container = document.getElementById('assignmentsContainer');
+      const relevantAssignments = assignments.filter(a => a.className === student.className);
+      container.innerHTML = relevantAssignments.map(a => `
+        <div class="assignment">
+          <strong>${a.subject} - ${a.className}</strong><br/>
+          <small>${a.date}</small>
+          <p>${a.content}</p>
+          <button onclick="downloadPDF('${a.subject} Assignment', \`${a.content}\`)">Download PDF</button>
+          <button onclick="printPDF('${a.subject} Assignment', \`${a.content}\`)">Print</button>
+          <button onclick="submitAssignment('${a.id}', '${a.subject}')">Submit Assignment</button>
+        </div>
+      `).join('') || '<p>No assignments yet.</p>';
+    }
+
+    function renderSubmittedAssignments() {
+      const container = document.getElementById('submittedAssignments');
+      const relevantAssignments = assignments.filter(a => a.className === student.className);
+      const completed = submissions.filter(s => s.studentId === student.id).map(s => s.assignmentId);
+      container.innerHTML = relevantAssignments.map(a => `
+        <div class="assignment">
+          <strong>${a.subject}</strong> - 
+          <span class="status ${completed.includes(a.id) ? 'submitted' : 'pending'}">
+            ${completed.includes(a.id) ? 'Submitted' : 'Pending'}
+          </span>
+        </div>
+      `).join('') || '<p>No assignments available.</p>';
+
+      const percent = relevantAssignments.length ? Math.floor((completed.length / relevantAssignments.length) * 100) : 0;
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressPercent').innerText = percent + '% Completed';
+    }
+
+    function loadLessons() {
+      const classes = JSON.parse(localStorage.getItem('classes')) || [];
+      const cls = classes.find(c => c.className === student.className);
+      const container = document.getElementById('lessonsContainer');
+      if (!cls) {
+        container.innerHTML = '<p>No lessons for your class yet.</p>';
+        return;
+      }
+      container.innerHTML = cls.scheme.map(term => `
+        <div class="lesson">
+          <h3>${term.term}</h3>
+          ${term.weeks.map(w => `
+            <p><strong>${w.week}:</strong> ${w.topic}</p>
+            <button onclick="downloadPDF('${w.topic}', \`${w.content}\`)">Download PDF</button>
+            <button onclick="printPDF('${w.topic}', \`${w.content}\`)">Print</button>
+          `).join('')}
+        </div>
+      `).join('');
+    }
+
+    function loadMessages() {
+      const container = document.getElementById('messagesContainer');
+      const studentMessages = messages.filter(m => m.receiver === student.id || m.receiver === student.className);
+      container.innerHTML = studentMessages.map(m => `
+        <div class="message">
+          <strong>${m.senderRole}:</strong> ${m.content}
+        </div>
+      `).join('') || '<p>No messages yet.</p>';
+    }
+
+    function downloadPDF(title, content) {
+      const blob = new Blob([`${title}\n\n${content}`], { type: 'application/pdf' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${title}.pdf`;
+      link.click();
+    }
+
+    function printPDF(title, content) {
+      const w = window.open();
+      w.document.write(`<pre><h2>${title}</h2>${content}</pre>`);
+      w.print();
+      w.close();
+    }
+
+    function submitAssignment(assignmentId, subject) {
+      const text = prompt(`Enter your response for "${subject}"`);
+      if (!text) return;
+
+      const submission = {
+        assignmentId,
+        studentId: student.id,
+        content: text,
+        date: new Date().toLocaleString()
+      };
+      const existing = JSON.parse(localStorage.getItem('assignmentSubmissions')) || [];
+      existing.push(submission);
+      localStorage.setItem('assignmentSubmissions', JSON.stringify(existing));
+      alert('Assignment submitted!');
+      renderSubmittedAssignments();
+      loadNotifications();
+    }
+
+    function logout() {
+      localStorage.removeItem('loggedInStudent');
+      alert('Logged out successfully!');
+      window.location.href = 'index.html';
+    }
+
+    window.onload = () => {
+      loadNotifications();
+      renderAssignments();
+      renderSubmittedAssignments();
+      loadLessons();
+      loadMessages();
+    };
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register Your School | School Connect</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(120deg, #4CAF50, #2E7D32);
+      color: #fff;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    form {
+      max-width: 500px;
+      margin: auto;
+      background: rgba(0,0,0,0.2);
+      padding: 20px;
+      border-radius: 8px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: none;
+      border-radius: 5px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 12px;
+      width: 100%;
+      background: #FFC107;
+      color: #000;
+      border: none;
+      border-radius: 5px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #FFA000;
+    }
+    .success {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #00FFAB;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Register Your School</h1>
+
+  <form id="schoolForm">
+    <label>School Name:</label>
+    <input type="text" id="schoolName" required>
+
+    <label>Address:</label>
+    <input type="text" id="address" required>
+
+    <label>City:</label>
+    <input type="text" id="city" required>
+
+    <label>State/Province:</label>
+    <input type="text" id="state" required>
+
+    <label>Country:</label>
+    <input type="text" id="country" required>
+
+    <label>Phone Number:</label>
+    <input type="tel" id="phone" required>
+
+    <label>Total Number of Students to Register:</label>
+    <input type="number" id="totalStudents" required>
+
+    <label>Date of Registration:</label>
+    <input type="date" id="regDate" required>
+
+    <label>Email:</label>
+    <input type="email" id="email" required>
+
+    <button type="submit">Register School</button>
+  </form>
+
+  <div class="success" id="successMessage"></div>
+  <a href="school-registration.html" class="btn">Sign Up</a>
+  
+   <footer>Greatenant SCHOOL CONNECT SOFTWARE</footer>
+
+
+  <script>
+    const form = document.getElementById('schoolForm');
+    const successMessage = document.getElementById('successMessage');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const schoolID = 'SC-' + Date.now(); // Generate unique ID based on timestamp
+      const schoolData = {
+        schoolID,
+        schoolName: document.getElementById('schoolName').value,
+        address: document.getElementById('address').value,
+        city: document.getElementById('city').value,
+        state: document.getElementById('state').value,
+        country: document.getElementById('country').value,
+        phone: document.getElementById('phone').value,
+        totalStudents: document.getElementById('totalStudents').value,
+        regDate: document.getElementById('regDate').value,
+        email: document.getElementById('email').value,
+        status: 'Pending Activation'
+      };
+
+      // Save to localStorage
+      let schools = JSON.parse(localStorage.getItem('schools')) || [];
+      schools.push(schoolData);
+      localStorage.setItem('schools', JSON.stringify(schools));
+
+      successMessage.innerHTML = `
+        🎉 School Registered!<br>
+        <strong>School ID:</strong> ${schoolID}<br>
+        Waiting for activation by Chief Admin.
+      `;
+
+      form.reset();
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chief Admin Login | School Connect</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0b0c10, #1f2833);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: #fff;
+      animation: fadeIn 1s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-box {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 30px 25px;
+      border-radius: 8px;
+      width: 320px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      animation: slideUp 0.8s ease forwards;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .login-box h2 { text-align: center; color: #00bcd4; margin-bottom: 20px; }
+    .login-box input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      background: #14191f;
+      border: 1px solid #00bcd4;
+      color: #fff;
+      border-radius: 4px;
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 10px;
+      background: #00bcd4;
+      color: #0b0c10;
+      border: none;
+      border-radius: 4px;
+      margin-top: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .login-box button:hover { background: #2ecc71; }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Chief Admin Login</h2>
+    <input type="email" id="email" placeholder="Email Address" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button onclick="login()">Login</button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCbBXfYldElHL0l-Goqr84byK8VTTDJEX0",
+      authDomain: "lesson-notes-app-34b76.firebaseapp.com",
+      projectId: "lesson-notes-app-34b76",
+      storageBucket: "lesson-notes-app-34b76.appspot.com",
+      messagingSenderId: "995220325596",
+      appId: "1:995220325596:web:d511c459ae07acafba6019"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    function login() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (!email || !password) {
+        alert("Please enter both email and password.");
+        return;
+      }
+
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(() => window.location.href = 'chief-admin.html') // ✅ Redirect to DASHBOARD file
+        .catch(err => alert(err.message));
+    }
+  </script>
+</body>
+</html>

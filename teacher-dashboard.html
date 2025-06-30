@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Teacher Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f6f9;
+      color: #333;
+      display: flex;
+    }
+    header {
+      background-color: #003366;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    #sidebar {
+      background-color: #003366;
+      color: white;
+      width: 220px;
+      min-height: 100vh;
+      padding-top: 2rem;
+      position: fixed;
+      left: 0;
+      top: 0;
+    }
+    #sidebar button {
+      display: block;
+      width: 100%;
+      background: none;
+      border: none;
+      color: white;
+      padding: 1rem;
+      text-align: left;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    #sidebar button:hover {
+      background-color: #00509e;
+    }
+    main {
+      margin-left: 220px;
+      flex: 1;
+      padding: 1rem;
+    }
+    .section {
+      display: none;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 1rem;
+    }
+    .assignment, .message {
+      background: #f9f9f9;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button.primary {
+      background-color: #003366;
+      color: white;
+      padding: 0.4rem 1rem;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+    }
+    button.primary:hover {
+      background-color: #00509e;
+    }
+    form input, form select, form textarea {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 0.7rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .logout-btn {
+      background: crimson;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+    }
+    .logout-btn:hover {
+      background: darkred;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <button onclick="showSection('lessonNotes')">Lesson Notes</button>
+    <button onclick="showSection('postAssignment')">Post Assignment</button>
+    <button onclick="showSection('postedAssignments')">View Assignments</button>
+    <button onclick="showSection('messages')">Send Messages</button>
+    <button onclick="showSection('pendingSubmissions')">Pending Submissions</button>
+    <button onclick="showSection('schoolAdminMessages')">School Admin Messages</button>
+    <button onclick="showSection('parentMessages')">Parents Messages</button>
+    <button onclick="showSection('studentMessages')">Students Messages</button>
+    <button onclick="showSection('studentSubmissions')">Student Submissions</button>
+  </div>
+
+  <main>
+    <header><h1>Teacher Dashboard</h1></header>
+    <a href="LESSONNOTES.html">Return to Homepage</a>
+
+    <div id="teacherInfo"></div>
+
+    <section id="lessonNotes" class="section">
+      <h2>Lesson Notes (Posted by Chief Admin)</h2>
+      <div id="lessonNotesContainer"></div>
+    </section>
+
+    <section id="postAssignment" class="section">
+      <h2>Post New Assignment</h2>
+      <form id="assignmentForm">
+        <label>Subject</label>
+        <input type="text" id="subject" required>
+
+        <label>Class</label>
+        <select id="classSelect" required>
+          <option value="">Select Class</option>
+          <option>KG1</option><option>KG2</option><option>NUR 1</option><option>NUR 2</option>
+          <option>PRIMARY 1</option><option>PRIMARY 2</option><option>PRIMARY 3</option>
+          <option>PRIMARY 4</option><option>PRIMARY 5</option><option>JSS1</option>
+          <option>JSS2</option><option>JSS3</option><option>SSS1</option>
+          <option>SSS2</option><option>SSS3</option>
+        </select>
+
+        <label>Assignment Content</label>
+        <textarea id="content" required></textarea>
+
+        <button type="submit" class="primary">Post Assignment</button>
+      </form>
+    </section>
+
+    <section id="postedAssignments" class="section">
+      <h2>Posted Assignments</h2>
+      <div id="assignmentsList"></div>
+    </section>
+
+    <section id="messages" class="section">
+      <h2>Send Message</h2>
+      <form id="messageForm">
+        <label>Recipient Role</label>
+        <select id="recipientRole" required>
+          <option value="">Select Recipient</option>
+          <option value="schoolAdmin">School Admin</option>
+          <option value="teacher">Teacher</option>
+          <option value="student">Student</option>
+          <option value="parent">Parent</option>
+        </select>
+        <label>Message</label>
+        <textarea id="messageContent" required></textarea>
+        <button type="submit" class="primary">Send Message</button>
+      </form>
+      <div id="sentMessages"></div>
+    </section>
+
+    <section id="pendingSubmissions" class="section">
+      <h2>Pending Submissions</h2>
+      <div id="pendingList"></div>
+    </section>
+
+    <section id="schoolAdminMessages" class="section">
+      <h2>School Admin Messages</h2>
+      <div id="schoolAdminMessagesContainer"></div>
+    </section>
+
+    <section id="parentMessages" class="section">
+      <h2>Parents Messages</h2>
+      <div id="parentMessagesContainer"></div>
+    </section>
+
+    <section id="studentMessages" class="section">
+      <h2>Students Messages</h2>
+      <div id="studentMessagesContainer"></div>
+    </section>
+
+    <section id="studentSubmissions" class="section">
+      <h2>Student Assignment Submissions</h2>
+      <div id="studentSubmissionsContainer"></div>
+    </section>
+
+  </main>
+
+  <button class="logout-btn" onclick="logout()">Logout</button>
+
+  <script>
+    const { jsPDF } = window.jspdf;
+
+    const loggedTeacher = JSON.parse(localStorage.getItem('teacherLoggedIn'));
+    if (!loggedTeacher) {
+      alert('Please login first!');
+      window.location.href = 'teacher-login.html';
+    }
+
+    document.getElementById('teacherInfo').innerHTML = `
+      <h2>Welcome, ${loggedTeacher.fullName}</h2>
+      <p><strong>Subjects:</strong> ${loggedTeacher.subjects}</p>
+      <p><strong>Qualification:</strong> ${loggedTeacher.qualification}</p>
+      <p><strong>School ID:</strong> ${loggedTeacher.schoolID}</p>
+    `;
+
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+      if (id === 'lessonNotes') displayAllLessonNotes();
+      if (id === 'postedAssignments') renderAssignments();
+      if (id === 'pendingSubmissions') renderPendingSubmissions();
+      if (id === 'messages') renderMessages();
+      if (id === 'schoolAdminMessages') renderRoleMessages('schoolAdminMessagesContainer', 'schoolAdmin');
+      if (id === 'parentMessages') renderRoleMessages('parentMessagesContainer', 'parent');
+      if (id === 'studentMessages') renderRoleMessages('studentMessagesContainer', 'student');
+      if (id === 'studentSubmissions') renderStudentSubmissions();
+    }
+
+    function displayAllLessonNotes() {
+      const allLessons = JSON.parse(localStorage.getItem('allLessonNotes')) || [];
+      const container = document.getElementById('lessonNotesContainer');
+      container.innerHTML = allLessons.length ? '' : '<p>No lesson notes posted yet.</p>';
+      allLessons.forEach(note => {
+        const div = document.createElement('div');
+        div.className = 'assignment';
+        div.innerHTML = `
+          <h4>${note.week} | ${note.class} | ${note.subject}</h4>
+          <p><strong>Topic:</strong> ${note.topic}</p>
+          <p>${note.content}</p>
+          <button onclick="generatePDF('${note.week} | ${note.class} | ${note.subject}', '${note.topic}', \`${note.content}\`, 'download')">Download PDF</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function generatePDF(title, topic, content, action = 'download') {
+      const doc = new jsPDF();
+      doc.text(title, 10, 20);
+      doc.text(`Topic: ${topic}`, 10, 30);
+      doc.text(doc.splitTextToSize(content, 180), 10, 40);
+      if (action === 'download') doc.save(`${title.replace(/ /g, '_')}.pdf`);
+    }
+
+    let assignments = JSON.parse(localStorage.getItem('assignments')) || [];
+
+    document.getElementById('assignmentForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const newAssignment = {
+        subject: document.getElementById('subject').value.trim(),
+        className: document.getElementById('classSelect').value,
+        content: document.getElementById('content').value.trim(),
+        date: new Date().toLocaleString()
+      };
+      assignments.push(newAssignment);
+      localStorage.setItem('assignments', JSON.stringify(assignments));
+      renderAssignments();
+      alert('Assignment posted successfully!');
+      e.target.reset();
+    });
+
+    function renderAssignments() {
+      const list = document.getElementById('assignmentsList');
+      list.innerHTML = '';
+      assignments.slice().reverse().forEach(a => {
+        const div = document.createElement('div');
+        div.className = 'assignment';
+        div.innerHTML = `<strong>${a.subject} - ${a.className}</strong><br><small>${a.date}</small><p>${a.content}</p>`;
+        list.appendChild(div);
+      });
+    }
+
+    let messages = JSON.parse(localStorage.getItem('messages')) || [];
+
+    document.getElementById('messageForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const newMsg = {
+        role: document.getElementById('recipientRole').value,
+        content: document.getElementById('messageContent').value.trim(),
+        date: new Date().toLocaleString()
+      };
+      messages.push(newMsg);
+      localStorage.setItem('messages', JSON.stringify(messages));
+      renderMessages();
+      alert('Message sent successfully!');
+      e.target.reset();
+    });
+
+    function renderMessages() {
+      const container = document.getElementById('sentMessages');
+      container.innerHTML = '';
+      messages.slice().reverse().forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'message';
+        div.innerHTML = `<strong>To: ${msg.role}</strong><br><small>${msg.date}</small><p>${msg.content}</p>`;
+        container.appendChild(div);
+      });
+    }
+
+    function renderRoleMessages(containerId, role) {
+      const container = document.getElementById(containerId);
+      const roleMessages = messages.filter(m => m.role === role);
+      container.innerHTML = roleMessages.length ? '' : '<p>No messages yet.</p>';
+      roleMessages.slice().reverse().forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'message';
+        div.innerHTML = `<strong>${msg.role}</strong><br><small>${msg.date}</small><p>${msg.content}</p>`;
+        container.appendChild(div);
+      });
+    }
+
+    function renderPendingSubmissions() {
+      const list = document.getElementById('pendingList');
+      const pending = JSON.parse(localStorage.getItem('pendingSubmissions')) || [];
+      list.innerHTML = pending.length ? '' : '<p>No pending submissions.</p>';
+      pending.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'assignment';
+        div.innerHTML = `<strong>${item.studentName} (${item.className})</strong><br><small>${item.assignmentTitle}</small><p>${item.reason}</p>`;
+        list.appendChild(div);
+      });
+    }
+
+    function renderStudentSubmissions() {
+      const list = document.getElementById('studentSubmissionsContainer');
+      const submissions = JSON.parse(localStorage.getItem('studentSubmissions')) || [];
+      list.innerHTML = submissions.length ? '' : '<p>No student submissions yet.</p>';
+      submissions.forEach(sub => {
+        const div = document.createElement('div');
+        div.className = 'assignment';
+        div.innerHTML = `<strong>${sub.studentName} (${sub.className})</strong><br><small>${sub.assignmentTitle}</small><p>${sub.content}</p>`;
+        list.appendChild(div);
+      });
+    }
+
+    function logout() {
+      localStorage.removeItem('teacherLoggedIn');
+      alert('Logged out successfully');
+      location.href = 'index.html';
+    }
+
+    showSection('lessonNotes');
+  </script>
+</body>
+</html>

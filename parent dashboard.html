@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parent Dashboard</title>
+<style>
+  body { background: #0b0c10; color: #fff; font-family: sans-serif; padding: 20px; }
+  h1, h2 { text-align: center; }
+  .section { margin: 20px 0; background: #1f2833; padding: 15px; border-radius: 8px; }
+  .note, .announcement, .message, .assignment { margin: 10px 0; background: #2c3e50; padding: 10px; border-radius: 5px; }
+  button { margin-right: 8px; margin-top: 5px; padding: 6px 12px; background: #45a29e; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+  button.logout { background: #e74c3c; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<h1>👨‍👩‍👧‍👦 Parent Dashboard - Lesson Notes</h1>
+<a href="LESSONNOTES.html">Return to Homepage</a>
+
+<div id="parentInfo" class="section"></div>
+
+<div id="notifications" class="section">
+  <h2>📢 Notifications</h2>
+  <ul id="notificationsList"></ul>
+</div>
+
+<div id="announcements" class="section">
+  <h2>📌 School Announcements</h2>
+</div>
+
+<div id="messages" class="section">
+  <h2>💬 Messages</h2>
+</div>
+
+<div id="assignments" class="section">
+  <h2>📄 Ward Assignments/Classwork</h2>
+</div>
+
+<div id="progress" class="section">
+  <h2>📊 Progress Tracker</h2>
+  <div id="progressTracker"></div>
+</div>
+
+<div id="lessonNotesContainer" class="section">
+  <h2>📚 Lesson Notes</h2>
+</div>
+
+<div class="section">
+  <h2>✉️ Send Message to:</h2>
+  <select id="recipientType">
+    <option value="teacher">Teacher</option>
+    <option value="schoolAdmin">School Admin</option>
+  </select>
+  <textarea id="messageContent" rows="3" placeholder="Type your message here..." style="width:100%; margin: 10px 0;"></textarea>
+  <button onclick="sendMessage()">Send Message</button>
+</div>
+
+<button onclick="logout()" class="logout">Logout</button>
+
+<footer>A product of Greatenant Academy SCHOOL CONNECT SOFTWARE</footer>
+
+<script>
+const loggedParent = JSON.parse(localStorage.getItem('parentLoggedIn'));
+if (!loggedParent) {
+  alert('Please login first!');
+  window.location.href = 'parent-login.html';
+} else {
+  const infoDiv = document.getElementById('parentInfo');
+  infoDiv.innerHTML = `
+    <h2>Profile:</h2>
+    <p><strong>Parent Name:</strong> ${loggedParent.fullName}</p>
+    <p><strong>Ward Name:</strong> ${loggedParent.wardName}</p>
+    <p><strong>Ward Class:</strong> ${loggedParent.className}</p>
+    <p><strong>Ward LIN:</strong> ${loggedParent.lin}</p>
+    <p><strong>School ID:</strong> ${loggedParent.schoolID}</p>
+  `;
+}
+
+// Demo data (replace with your own backend/localStorage data)
+const notifications = [
+  { text: `Pending Assignment in Mathematics for ${loggedParent.wardName}` },
+  { text: `Assignment on Science is due tomorrow!` }
+];
+
+const announcements = [
+  { title: "Mid-Term Test Announcement", content: "Mid-term tests will commence next week. Please prepare your wards." }
+];
+
+const messages = [
+  { from: "Teacher (Mr. James)", content: "Kindly ensure ${loggedParent.wardName} completes the pending Mathematics assignment." },
+  { from: "School Admin", content: "There will be Parent-Teacher meetings on Friday." }
+];
+
+const assignments = [
+  { title: "Science Classwork", status: "Submitted" },
+  { title: "Mathematics Assignment", status: "Pending" }
+];
+
+const progressTracker = {
+  completed: 3,
+  total: 5
+};
+
+const lessonNotes = [
+  { week: "Week 1", childName: loggedParent?.wardName || "Child", subject: "Mathematics", topic: "Fractions", content: "Fractions represent parts of a whole..." },
+  { week: "Week 2", childName: loggedParent?.wardName || "Child", subject: "Science", topic: "Photosynthesis", content: "Photosynthesis is the process by which green plants..." }
+];
+
+function loadNotifications() {
+  const list = document.getElementById('notificationsList');
+  notifications.forEach(note => {
+    const li = document.createElement('li');
+    li.textContent = note.text;
+    list.appendChild(li);
+  });
+}
+
+function loadAnnouncements() {
+  const container = document.getElementById('announcements');
+  announcements.forEach(ann => {
+    const div = document.createElement('div');
+    div.classList.add('announcement');
+    div.innerHTML = `<h3>${ann.title}</h3><p>${ann.content}</p>`;
+    container.appendChild(div);
+  });
+}
+
+function loadMessages() {
+  const container = document.getElementById('messages');
+  messages.forEach(msg => {
+    const div = document.createElement('div');
+    div.classList.add('message');
+    div.innerHTML = `<strong>From:</strong> ${msg.from} <p>${msg.content}</p>`;
+    container.appendChild(div);
+  });
+}
+
+function loadAssignments() {
+  const container = document.getElementById('assignments');
+  assignments.forEach(asg => {
+    const div = document.createElement('div');
+    div.classList.add('assignment');
+    div.innerHTML = `<h4>${asg.title}</h4><p>Status: <strong>${asg.status}</strong></p>`;
+    container.appendChild(div);
+  });
+}
+
+function loadProgress() {
+  const tracker = document.getElementById('progressTracker');
+  const percent = Math.round((progressTracker.completed / progressTracker.total) * 100);
+  tracker.innerHTML = `
+    <p>${progressTracker.completed} out of ${progressTracker.total} assignments completed.</p>
+    <progress value="${progressTracker.completed}" max="${progressTracker.total}" style="width:100%;"></progress>
+    <p><strong>${percent}% completed</strong></p>
+  `;
+}
+
+function loadLessonNotes() {
+  const container = document.getElementById('lessonNotesContainer');
+  lessonNotes.forEach((note, index) => {
+    const div = document.createElement('div');
+    div.classList.add('note');
+    div.innerHTML = `
+      <h3>${note.week} | ${note.childName} | ${note.subject}</h3>
+      <strong>Topic:</strong> ${note.topic}
+      <p>${note.content}</p>
+      <button onclick="downloadPDF(${index})">Download PDF</button>
+      <button onclick="printPDF(${index})">Print PDF</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+async function downloadPDF(index) {
+  const note = lessonNotes[index];
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(14);
+  doc.text(`${note.week} | ${note.childName} | ${note.subject}`, 10, 20);
+  doc.setFontSize(12);
+  doc.text(`Topic: ${note.topic}`, 10, 30);
+  doc.text(note.content, 10, 40);
+  doc.save(`${note.childName}-${note.week}-${note.subject}.pdf`);
+}
+
+async function printPDF(index) {
+  const note = lessonNotes[index];
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(14);
+  doc.text(`${note.week} | ${note.childName} | ${note.subject}`, 10, 20);
+  doc.setFontSize(12);
+  doc.text(`Topic: ${note.topic}`, 10, 30);
+  doc.text(note.content, 10, 40);
+  const pdfBlob = doc.output('blob');
+  const url = URL.createObjectURL(pdfBlob);
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.src = url;
+  document.body.appendChild(iframe);
+  iframe.onload = () => {
+    iframe.contentWindow.print();
+    URL.revokeObjectURL(url);
+    document.body.removeChild(iframe);
+  };
+}
+
+function sendMessage() {
+  const recipient = document.getElementById('recipientType').value;
+  const content = document.getElementById('messageContent').value.trim();
+  if (!content) {
+    alert('Please type a message.');
+    return;
+  }
+  alert(`Message sent to ${recipient === 'teacher' ? 'Teacher' : 'School Admin'}: "${content}"`);
+  document.getElementById('messageContent').value = '';
+}
+
+function logout() {
+  localStorage.removeItem('parentLoggedIn');
+  alert('You have been logged out.');
+  window.location.href = 'index.html';
+}
+
+// Load everything
+window.onload = () => {
+  loadNotifications();
+  loadAnnouncements();
+  loadMessages();
+  loadAssignments();
+  loadProgress();
+  loadLessonNotes();
+};
+</script>
+
+</body>
+</html>

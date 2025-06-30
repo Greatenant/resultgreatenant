@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parent Sign Up</title>
+<style>
+  body { font-family: sans-serif; background: #0b0c10; color: #fff; padding: 20px; }
+  form { background: #1f2833; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; }
+  input, select { width: 100%; padding: 10px; margin: 8px 0; border: none; border-radius: 5px; }
+  button { background: #66fcf1; color: #0b0c10; border: none; padding: 12px; width: 100%; margin-top: 10px; border-radius: 5px; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h2>Parent Sign Up</h2>
+
+<form id="parentSignupForm">
+  <input type="text" id="schoolID" placeholder="School ID" required>
+  <input type="text" id="fullName" placeholder="Full Name" required>
+  <input type="text" id="wardName" placeholder="Name of Your Ward" required>
+  <input type="text" id="className" placeholder="Ward Class (e.g., JSS2B)" required>
+  <input type="text" id="lin" placeholder="Ward LIN Number" required>
+  <input type="text" id="username" placeholder="Username" required>
+  <input type="password" id="password" placeholder="Password" required>
+  <button type="submit">Register</button>
+</form>
+
+<script>
+  const form = document.getElementById('parentSignupForm');
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const parent = {
+      schoolID: document.getElementById('schoolID').value,
+      fullName: document.getElementById('fullName').value,
+      wardName: document.getElementById('wardName').value,
+      className: document.getElementById('className').value,
+      lin: document.getElementById('lin').value,
+      username: document.getElementById('username').value,
+      password: document.getElementById('password').value
+    };
+
+    let parents = JSON.parse(localStorage.getItem('parents')) || [];
+    parents.push(parent);
+    localStorage.setItem('parents', JSON.stringify(parents));
+
+    alert('Parent Registered Successfully!');
+    form.reset();
+  });
+</script>
+
+</body>
+</html>

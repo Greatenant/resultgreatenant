@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chief Admin Dashboard</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #0b0c10; color: #fff; }
+    header { background: #1f2833; padding: 15px; text-align: center; }
+    #sidebar { position: fixed; top: 0; left: 0; height: 100%; width: 250px; background: #14191f; padding: 20px; overflow-y: auto; }
+    #sidebar h2 { font-size: 1.1em; margin-bottom: 12px; color: #00bcd4; text-transform: uppercase; }
+    #sidebar a, .sidebar-class-link { display: block; color: #fff; padding: 8px; margin-bottom: 5px; background: #0b0c10; border-radius: 4px; text-decoration: none; font-size: 0.95em; }
+    #sidebar a:hover, .sidebar-class-link:hover { background: #00bcd4; color: #0b0c10; }
+    .main { margin-left: 270px; padding: 20px; }
+    .section { background: #1f2833; margin: 15px 0; padding: 15px; border-radius: 8px; }
+    button { margin-top: 8px; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; }
+    .approve { background: #2ecc71; color: #fff; }
+    .deactivate, .logout, .delete { background: #e74c3c; color: #fff; }
+    .add, .send, .edit { background: #3498db; color: #fff; }
+    input, select, textarea { padding: 8px; width: 100%; margin-top: 5px; border-radius: 4px; border: none; margin-bottom: 10px; }
+    textarea { resize: vertical; }
+    .week-topic { width: 50%; }
+    .lesson-content { width: 100%; height: 80px; }
+
+    @media(max-width: 768px) {
+      #sidebar { width: 100%; position: relative; }
+      .main { margin-left: 0; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Chief Admin Dashboard</h1>
+  </header>
+  <a href="LESSONNOTES.html">Return to Homepage</a>
+
+  <div id="sidebar">
+    <h2>Navigation</h2>
+    <a href="#registeredSchools">Registered Schools</a>
+    <a href="#createClass">Create Class & Scheme</a>
+    <h2>All Classes</h2>
+    <div id="classSidebarLinks"></div>
+    <button class="logout" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="main">
+    <div class="section" id="registeredSchools">
+      <h2>Registered Schools</h2>
+      <div id="schoolList"></div>
+
+      <h3>Add New School</h3>
+      <input type="text" id="schoolName" placeholder="School Name">
+      <input type="text" id="city" placeholder="City">
+      <input type="text" id="country" placeholder="Country">
+      <input type="tel" id="phone" placeholder="Phone Number">
+      <input type="email" id="email" placeholder="Email Address">
+      <input type="number" id="learnerLimit" placeholder="Number of Students">
+      <input type="text" id="username" placeholder="School Username">
+      <input type="password" id="password" placeholder="Password">
+      <button class="add" id="addSchoolBtn">Register School</button>
+    </div>
+
+    <div class="section">
+      <h2>Send Direct Message to School Admin</h2>
+      <select id="schoolSelect"></select>
+      <textarea id="messageContent" rows="3" placeholder="Enter your message here..."></textarea>
+      <button class="send" id="sendMessageBtn">Send Message</button>
+    </div>
+
+    <div class="section" id="createClass">
+      <h2>Create Class & Scheme of Work</h2>
+      <input type="text" id="className" placeholder="Enter Class Name (e.g., Primary 1)">
+      <input type="text" id="session" placeholder="Enter Session (e.g., 2025/2026)">
+      <button class="add" id="createClassBtn">Create Class</button>
+    </div>
+
+    <div class="section" id="classDetails">
+      <h2>Class Details (Editable)</h2>
+      <div id="classContent"></div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCbBXfYldElHL0l-Goqr84byK8VTTDJEX0",
+      authDomain: "lesson-notes-app-34b76.firebaseapp.com",
+      projectId: "lesson-notes-app-34b76",
+      storageBucket: "lesson-notes-app-34b76.appspot.com",
+      messagingSenderId: "995220325596",
+      appId: "1:995220325596:web:d511c459ae07acafba6019"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user) {
+        alert("Not authenticated! Redirecting to login...");
+        window.location.href = "login.html";
+      }
+    });
+
+    document.getElementById("addSchoolBtn").addEventListener("click", addSchool);
+    document.getElementById("sendMessageBtn").addEventListener("click", sendMessage);
+    document.getElementById("createClassBtn").addEventListener("click", createClass);
+
+    function generateID() { return 'ID-' + Math.random().toString(36).substr(2, 9).toUpperCase(); }
+
+    async function addSchool() {
+      const school = {
+        id: generateID(),
+        name: document.getElementById('schoolName').value.trim(),
+        city: document.getElementById('city').value.trim(),
+        country: document.getElementById('country').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        learnerLimit: parseInt(document.getElementById('learnerLimit').value.trim()),
+        username: document.getElementById('username').value.trim(),
+        learners: 0, active: true
+      };
+      if (!school.name || !school.username || !document.getElementById('password').value.trim()) {
+        alert("Please fill all required fields.");
+        return;
+      }
+      try {
+        await db.collection("schools").add(school);
+        document.querySelectorAll('#registeredSchools input').forEach(input => input.value = '');
+        loadSchools(); loadSchoolOptions();
+        alert("School added successfully!");
+      } catch (err) {
+        alert("Error adding school: " + err.message);
+      }
+    }
+
+    async function loadSchoolsAndOptions() {
+      const [schoolsSnapshot] = await Promise.all([
+        db.collection("schools").get()
+      ]);
+
+      const list = document.getElementById('schoolList');
+      const select = document.getElementById('schoolSelect');
+      list.innerHTML = '';
+      select.innerHTML = '';
+
+      schoolsSnapshot.forEach(doc => {
+        const s = doc.data();
+        list.innerHTML += `
+          <div class="section">
+            <strong>${s.name}</strong><br>${s.city}, ${s.country}<br>
+            Phone: ${s.phone} | Email: ${s.email}<br>
+            Learners: ${s.learners} / ${s.learnerLimit}<br>ID: ${s.id}<br>
+            Status: ${s.active ? '<span style="color:#2ecc71;">Active</span>' : '<span style="color:#e74c3c;">Inactive</span>'}<br>
+            <button class="approve" onclick="toggleStatus('${doc.id}', true)">Activate</button>
+            <button class="deactivate" onclick="toggleStatus('${doc.id}', false)">Deactivate</button>
+            <button class="delete" onclick="deleteSchool('${doc.id}')">Delete</button>
+          </div>`;
+
+        select.innerHTML += `<option value="${doc.id}">${s.name}</option>`;
+      });
+    }
+
+    function toggleStatus(docId, status) {
+      db.collection("schools").doc(docId).update({ active: status }).then(loadSchoolsAndOptions);
+    }
+
+    function deleteSchool(docId) {
+      if (confirm("Are you sure you want to delete this school?")) {
+        db.collection("schools").doc(docId).delete().then(loadSchoolsAndOptions);
+      }
+    }
+
+    async function sendMessage() {
+      const schoolId = document.getElementById('schoolSelect').value;
+      const message = document.getElementById('messageContent').value.trim();
+      if (!schoolId || !message) return alert("Select school and enter a message.");
+      try {
+        await db.collection("messages").add({ schoolId, message, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+        alert("Message sent successfully.");
+        document.getElementById('messageContent').value = '';
+      } catch (err) {
+        alert("Failed to send message: " + err.message);
+      }
+    }
+
+    async function createClass() {
+      const className = document.getElementById('className').value.trim();
+      const session = document.getElementById('session').value.trim();
+      if (!className || !session) return alert("Please provide both class name and session.");
+      const classObj = {
+        className, session,
+        scheme: ["First Term", "Second Term", "Third Term"].map(term => ({
+          term, weeks: Array.from({ length: 12 }, (_, i) => ({ week: `Week ${i + 1}`, topic: '', content: '' }))
+        }))
+      };
+      try {
+        await db.collection("classes").add(classObj);
+        alert("Class created successfully!");
+        loadClasses();
+        document.getElementById('className').value = '';
+        document.getElementById('session').value = '';
+      } catch (err) {
+        alert("Error creating class: " + err.message);
+      }
+    }
+
+    async function loadClasses() {
+      const sidebar = document.getElementById('classSidebarLinks');
+      const details = document.getElementById('classContent');
+      sidebar.innerHTML = '';
+      details.innerHTML = '';
+
+      const snapshot = await db.collection("classes").get();
+      snapshot.forEach(doc => {
+        const cls = doc.data();
+        sidebar.innerHTML += `<a href="#${doc.id}" class="sidebar-class-link">${cls.className}</a>`;
+        details.innerHTML += `
+          <div class="section" id="${doc.id}">
+            <h3>${cls.className} (${cls.session})</h3>
+            ${cls.scheme.map((term, ti) => `
+              <div class="section" style="background:#14191f;">
+                <strong>${term.term}</strong>
+                ${term.weeks.map((w, wi) => `
+                  <div class="section" style="background:#0b0c10;">
+                    <strong>${w.week}:</strong><br>
+                    <input class="week-topic" value="${w.topic}" onchange="updateLessonNote('${doc.id}', ${ti}, ${wi}, 'topic', this.value)">
+                    <textarea class="lesson-content" onchange="updateLessonNote('${doc.id}', ${ti}, ${wi}, 'content', this.value)">${w.content}</textarea>
+                  </div>
+                `).join('')}
+              </div>
+            `).join('')}
+          </div>`;
+      });
+    }
+
+    async function updateLessonNote(docId, termIndex, weekIndex, field, value) {
+      const docSnap = await db.collection("classes").doc(docId).get();
+      if (docSnap.exists) {
+        const data = docSnap.data();
+        data.scheme[termIndex].weeks[weekIndex][field] = value;
+        await db.collection("classes").doc(docId).set(data);
+      }
+    }
+
+    function logout() {
+      firebase.auth().signOut().then(() => {
+        alert("Logged out successfully.");
+        window.location.href = "login.html";
+      });
+    }
+
+    window.onload = () => {
+      loadSchoolsAndOptions();
+      loadClasses();
+    };
+  </script>
+</body>
+
+</html>
